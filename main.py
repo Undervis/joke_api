@@ -19,13 +19,23 @@ async def root():
 
 
 @app.get("/joke/{joke_id}")
-async def say_hello(joke_id: int):
+async def get_joke_by_id(joke_id: int):
     return get_joke(joke_id)
 
 
 @app.get("/joke")
-async def say_hello():
+async def get_rand_joke():
     return get_joke(0)
+
+
+@app.get("/jokes")
+async def get_all_jokes():
+    return get_joke(-1)
+
+
+@app.post("/add_joke")
+async def add_joke(title: str, content: str):
+    cursor.execute(f'insert into Jokes(title, content) values("{title}", "{content}")')
 
 
 def get_joke(joke_id=0):
@@ -33,9 +43,13 @@ def get_joke(joke_id=0):
         cursor.execute(f"select * from Jokes where id = {joke_id}")
         joke = cursor.fetchone()
         return {"id": joke[0], "title": joke[1], "content": joke[2]}
-    else:
+    elif joke_id == 0:
         cursor.execute(f"select * from Jokes")
         rand_id = random.randrange(1, len(cursor.fetchall()))
         cursor.execute(f"select * from Jokes where id = {rand_id}")
         joke = cursor.fetchone()
         return {"id": joke[0], "title": joke[1], "content": joke[2]}
+    elif joke_id == -1:
+        cursor.execute(f"select * from Jokes")
+        jokes_result = cursor.fetchall()
+        return [{"id": joke[0], "title": joke[1], "content": joke[2]} for joke in jokes_result]
